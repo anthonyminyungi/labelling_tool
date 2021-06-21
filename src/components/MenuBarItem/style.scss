@@ -1,0 +1,18 @@
+@import '../../styles/index.scss';
+
+$menu-bar-background: #fcfcfc;
+
+.menu-item {
+  margin: 0 auto;
+  width: 40px;
+  height: 40px;
+  opacity: 1;
+  background: transparent 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  &:hover {
+    // background-color: var(--menu-item-selected);
+    background-color: darken($menu-bar-background, 5%);
+  }
+}
