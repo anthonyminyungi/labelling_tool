@@ -1,12 +1,13 @@
 import React from 'react';
 
-import { Header } from './components';
+import { Header, MainContainer } from './components';
 import './styles/index.scss';
 
 function App() {
   return (
     <React.Fragment>
       <Header />
+      <MainContainer />
     </React.Fragment>
   );
 }

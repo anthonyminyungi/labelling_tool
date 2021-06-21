@@ -1,7 +1,9 @@
 import React from 'react';
 
+import './style.scss';
+
 const MenuBar = () => {
-  return <div>menu bar</div>;
+  return <div className="menu-bar"></div>;
 };
 
 export default MenuBar;
