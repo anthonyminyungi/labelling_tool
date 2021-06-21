@@ -1,1 +1,28 @@
 @import '../../styles/index.scss';
+
+.header-box {
+  width: 100%;
+  height: 64px;
+  //   transform: matrix(0, -1, 1, 0, 0, 0);
+  background: #fcfcfc 0% 0% no-repeat padding-box;
+  border: 1px solid #ebedf2;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  //   margin-top: 21px;
+  margin-left: 56px;
+  width: 127px;
+  height: 27px;
+  font: var(--unnamed-font-style-normal) normal 600 var(--unnamed-font-size-20) /
+    var(--unnamed-line-spacing-27) var(--unnamed-font-family-noto-sans-display);
+  letter-spacing: var(--unnamed-character-spacing-0);
+  color: var(--unnamed-color-141746);
+  text-align: left;
+  font: normal normal 600 20px/27px Noto Sans Display;
+  letter-spacing: 0px;
+  color: #141746;
+  opacity: 1;
+}
