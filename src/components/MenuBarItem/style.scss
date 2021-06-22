@@ -15,4 +15,8 @@ $menu-bar-background: #fcfcfc;
     // background-color: var(--menu-item-selected);
     background-color: darken($menu-bar-background, 5%);
   }
+
+  &.selected {
+    background-color: darken($menu-bar-background, 15%);
+  }
 }

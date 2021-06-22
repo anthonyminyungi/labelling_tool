@@ -7,8 +7,8 @@ import './style.scss';
 const MenuBar = () => {
   return (
     <div className="menu-bar">
-      <MenuBarItem icon={selectIcon} />
-      <MenuBarItem icon={createIcon} />
+      <MenuBarItem id="select" icon={selectIcon} />
+      <MenuBarItem id="create" icon={createIcon} />
     </div>
   );
 };
