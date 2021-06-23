@@ -27,58 +27,74 @@ const Label = props => {
     setLabels,
     selected,
     onClick,
+    topOffset,
+    leftOffset,
   } = props;
 
   const [rotateAngle, setRotateAngle] = useState(0);
-  const [isMousedown, setIsMousedown] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartY, setDragStartY] = useState(0);
+
+  const rightLimit = window.innerWidth - leftOffset;
+  const bottomLimit = window.innerHeight - topOffset;
 
   const handleDrag = useCallback(
     (deltaX, deltaY) => {
-      //   setLeft(left + deltaX);
-      //   setTop(top + deltaY);
-      let currentLabels = labels;
+      let currentLabels = [...labels];
       let currentLabel = labels[index];
       currentLabel = {
         ...currentLabel,
-        startX: startX + deltaX,
-        startY: startY + deltaY,
+        startX: Math.max(Math.min(startX + deltaX, rightLimit - width), 0),
+        startY: Math.max(Math.min(startY + deltaY, bottomLimit - height), 0),
+        endX: Math.min(Math.max(startX + deltaX, 0) + width, rightLimit),
+        endY: Math.min(Math.max(startY + deltaY, 0) + height, bottomLimit),
       };
-      //   console.log(currentLabel);
       currentLabels.splice(index, 1, currentLabel);
       setLabels(currentLabels);
     },
-    [index, labels, setLabels, startX, startY]
+    [
+      bottomLimit,
+      height,
+      index,
+      labels,
+      rightLimit,
+      setLabels,
+      startX,
+      startY,
+      width,
+    ]
   );
 
-  const startDrag = useCallback(
+  const handleStartDrag = useCallback(
     e => {
-      setIsMousedown(true);
-      let { clientX: dragStartX, clientY: dragStartY } = e;
+      setIsMouseDown(true);
+      setDragStartX(e.clientX);
+      setDragStartY(e.clientY);
 
       const onMove = e => {
-        if (!isMousedown) return;
+        if (!isMouseDown) return;
         e.stopImmediatePropagation();
         const { clientX, clientY } = e;
         const deltaX = clientX - dragStartX;
         const deltaY = clientY - dragStartY;
-        // console.log(deltaX, deltaY);
 
         handleDrag(deltaX, deltaY);
-        dragStartX = clientX;
-        dragStartY = clientY;
+        setDragStartX(clientX);
+        setDragStartY(clientY);
       };
 
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        if (!isMousedown) return;
-        setIsMousedown(false);
+        if (!isMouseDown) return;
+        setIsMouseDown(false);
       };
 
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     },
-    [handleDrag, isMousedown]
+    [dragStartX, dragStartY, handleDrag, isMouseDown]
   );
 
   const style = {
@@ -91,14 +107,14 @@ const Label = props => {
     border: '3px solid #5668D9',
   };
 
-  //   console.log(selected);
+  console.log(selected);
   return (
     <div
       id={id}
       className="board-label-box rect single-resizer"
       style={style}
       onClick={onClick}
-      onMouseDown={startDrag}
+      onMouseDown={handleStartDrag}
       tabIndex="-1"
     >
       {selected && (
