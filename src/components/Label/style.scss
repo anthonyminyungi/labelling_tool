@@ -1,0 +1,95 @@
+@import '../../styles/index.scss';
+
+.board-label-box {
+  &:focus {
+    outline: none;
+  }
+
+  cursor: all-scroll;
+
+  .square {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--unnamed-color-5668d9);
+    background: #ffffff 0% 0% no-repeat padding-box;
+    // border-radius: 1px;
+  }
+
+  .rotate {
+    position: absolute;
+    left: calc(50% - 4px);
+    top: -54px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .rotate-circle {
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--unnamed-color-5668d9);
+    background: #ffffff 0% 0% no-repeat padding-box;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .rotate-bar {
+    height: 36px;
+    background-color: var(--unnamed-color-5668d9);
+    width: 2px;
+  }
+
+  .t,
+  .tl,
+  .tr {
+    top: -8px;
+  }
+
+  .b,
+  .bl,
+  .br {
+    bottom: -8px;
+  }
+  .r,
+  .tr,
+  .br {
+    right: -8px;
+  }
+  .tl,
+  .l,
+  .bl {
+    left: -8px;
+  }
+  .l,
+  .r {
+    top: 50%;
+    margin-top: -3px;
+  }
+  .t,
+  .b {
+    left: 50%;
+    margin-left: -3px;
+  }
+
+  .t,
+  .b {
+    cursor: ns-resize;
+  }
+
+  .tl,
+  .br {
+    cursor: nwse-resize;
+  }
+
+  .tr,
+  .bl {
+    cursor: nesw-resize;
+  }
+
+  .l,
+  .r {
+    cursor: ew-resize;
+  }
+}

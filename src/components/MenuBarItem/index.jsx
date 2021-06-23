@@ -10,7 +10,6 @@ const MenuBarItem = props => {
   const { id, icon } = props;
 
   const currentMenu = useSelector(state => getCurrentMenu(state));
-  console.log(currentMenu);
 
   const handleClick = useCallback(() => {
     if (id.toUpperCase() !== currentMenu) {
