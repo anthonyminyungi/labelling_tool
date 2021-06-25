@@ -1,11 +1,66 @@
 @import '../../styles/index.scss';
 
 .board-label-box {
+  cursor: all-scroll;
   &:focus {
     outline: none;
   }
 
-  cursor: all-scroll;
+  .resizable-handler {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    z-index: 1;
+    &.tl,
+    &.t,
+    &.tr {
+      top: -10px;
+    }
+    &.tl,
+    &.l,
+    &.bl {
+      left: -10px;
+    }
+    &.bl,
+    &.b,
+    &.br {
+      bottom: -10px;
+    }
+    &.br,
+    &.r,
+    &.tr {
+      right: -10px;
+    }
+    &.l,
+    &.r {
+      margin-top: -10px;
+    }
+    &.t,
+    &.b {
+      margin-left: -10px;
+    }
+
+    // &.t,
+    // &.b {
+    //   cursor: ns-resize;
+    // }
+
+    // &.tl,
+    // &.br {
+    //   cursor: nwse-resize;
+    // }
+
+    // &.tr,
+    // &.bl {
+    //   cursor: nesw-resize;
+    // }
+
+    // &.l,
+    // &.r {
+    //   cursor: ew-resize;
+    // }
+  }
 
   .square {
     position: absolute;
@@ -71,25 +126,5 @@
   .b {
     left: 50%;
     margin-left: -3px;
-  }
-
-  .t,
-  .b {
-    cursor: ns-resize;
-  }
-
-  .tl,
-  .br {
-    cursor: nwse-resize;
-  }
-
-  .tr,
-  .bl {
-    cursor: nesw-resize;
-  }
-
-  .l,
-  .r {
-    cursor: ew-resize;
   }
 }
