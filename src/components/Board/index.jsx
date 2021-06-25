@@ -40,8 +40,9 @@ const Board = () => {
           ...rect,
           endX: e.offsetX,
           endY: e.offsetY,
-          leftOffset: canvasRef.current?.offsetLeft,
+          leftOffset: canvasRef?.current.offsetLeft,
           topOffset: canvasRef?.current.offsetTop,
+
           id: `board-label-${randomBytes(16).toString('hex')}`,
         },
       ]);
@@ -166,6 +167,8 @@ const Board = () => {
             labels={labels}
             index={index}
             // labelObject={label}
+            leftOffset={label.leftOffset}
+            topOffset={label.topOffset}
             setLabels={setLabels}
             id={label.id}
             onClick={handleClickLabel}

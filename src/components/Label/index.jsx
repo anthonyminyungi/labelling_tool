@@ -1,5 +1,14 @@
 import React, { useRef, useState, useCallback } from 'react';
 
+import {
+  getLength,
+  getAngle,
+  getCursor,
+  centerToTL,
+  tLToCenter,
+  getNewStyle,
+  degToRadian,
+} from '../../utils';
 import './style.scss';
 
 const zoomableMap = {
@@ -27,58 +36,248 @@ const Label = props => {
     setLabels,
     selected,
     onClick,
+    topOffset,
+    leftOffset,
   } = props;
 
+  const labelBoxRef = useRef(null);
+
+  const parentRotateAngle = 0;
+  const rotatable = true;
+  const zoomable = '';
+  const minWidth = 10;
+  const minHeight = 10;
+  const aspectRatio = false;
+
   const [rotateAngle, setRotateAngle] = useState(0);
-  const [isMousedown, setIsMousedown] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartY, setResizeStartY] = useState(0);
+
+  const rightLimit = window.innerWidth - leftOffset;
+  const bottomLimit = window.innerHeight - topOffset;
 
   const handleDrag = useCallback(
     (deltaX, deltaY) => {
-      //   setLeft(left + deltaX);
-      //   setTop(top + deltaY);
-      let currentLabels = labels;
+      let currentLabels = [...labels];
       let currentLabel = labels[index];
       currentLabel = {
         ...currentLabel,
-        startX: startX + deltaX,
-        startY: startY + deltaY,
+        startX: Math.max(Math.min(startX + deltaX, rightLimit - width), 0),
+        startY: Math.max(Math.min(startY + deltaY, bottomLimit - height), 0),
+        endX: Math.min(Math.max(startX + deltaX, 0) + width, rightLimit),
+        endY: Math.min(Math.max(startY + deltaY, 0) + height, bottomLimit),
       };
-      //   console.log(currentLabel);
       currentLabels.splice(index, 1, currentLabel);
       setLabels(currentLabels);
     },
-    [index, labels, setLabels, startX, startY]
+    [
+      bottomLimit,
+      height,
+      index,
+      labels,
+      rightLimit,
+      setLabels,
+      startX,
+      startY,
+      width,
+    ]
   );
 
-  const startDrag = useCallback(
+  const handleStartDrag = useCallback(
     e => {
-      setIsMousedown(true);
-      let { clientX: dragStartX, clientY: dragStartY } = e;
+      setIsMouseDown(true);
+      setDragStartX(e.clientX);
+      setDragStartY(e.clientY);
 
       const onMove = e => {
-        if (!isMousedown) return;
+        if (!isMouseDown) return;
         e.stopImmediatePropagation();
         const { clientX, clientY } = e;
         const deltaX = clientX - dragStartX;
         const deltaY = clientY - dragStartY;
-        // console.log(deltaX, deltaY);
 
         handleDrag(deltaX, deltaY);
-        dragStartX = clientX;
-        dragStartY = clientY;
+        setDragStartX(clientX);
+        setDragStartY(clientY);
       };
 
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        if (!isMousedown) return;
-        setIsMousedown(false);
+        if (!isMouseDown) return;
+        setIsMouseDown(false);
       };
 
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     },
-    [handleDrag, isMousedown]
+    [dragStartX, dragStartY, handleDrag, isMouseDown]
+  );
+
+  const handleResize = useCallback(
+    (length, alpha, rect, type, isShiftKey) => {
+      const beta = alpha - degToRadian(rotateAngle + parentRotateAngle);
+      const deltaW = length * Math.cos(beta);
+      const deltaH = length * Math.sin(beta);
+      const ratio = isShiftKey || !aspectRatio ? rect.width / rect.height : 1;
+      const {
+        position: { centerX, centerY },
+        size: { width: _width, height: _height },
+      } = getNewStyle(
+        type,
+        { ...rect, rotateAngle },
+        deltaW,
+        deltaH,
+        ratio,
+        minWidth,
+        minHeight
+      );
+
+      let {
+        top: _top,
+        left: _left,
+        width: __width,
+        height: __height,
+      } = centerToTL({
+        centerX,
+        centerY,
+        width: _width,
+        height: _height,
+        rotateAngle,
+      });
+
+      let currentLabels = [...labels];
+      let currentLabel = labels[index];
+      currentLabel = {
+        ...currentLabel,
+        startX: Math.round(_left),
+        startY: Math.round(_top),
+        width: Math.round(__width),
+        height: Math.round(__height),
+      };
+      currentLabels.splice(index, 1, currentLabel);
+      setLabels(currentLabels);
+    },
+    [aspectRatio, index, labels, rotateAngle, setLabels]
+  );
+
+  const handleStartResize = useCallback(
+    (e, cursor) => {
+      if (e.button !== 0) return;
+      document.body.style.cursor = cursor;
+      const {
+        position: { centerX, centerY },
+        size: { width: _width, height: _height },
+        transform: { rotateAngle: _rotateAngle },
+      } = tLToCenter({ top: startY, left: startX, width, height, rotateAngle });
+      setResizeStartX(e.clientX);
+      setResizeStartY(e.clientY);
+      const rect = {
+        width: _width,
+        height: _height,
+        centerX,
+        centerY,
+        rotateAngle: _rotateAngle,
+      };
+      const type = e.target.getAttribute('class').split(' ')[0];
+      setIsMouseDown(true);
+
+      const onMove = e => {
+        if (!isMouseDown) return;
+        e.stopImmediatePropagation();
+        const { clientX, clientY } = e;
+        const deltaX = clientX - resizeStartX;
+        const deltaY = clientY - resizeStartY;
+        const alpha = Math.atan2(deltaY, deltaX);
+        const deltaL = getLength(deltaX, deltaY);
+        const isShiftKey = e.shiftKey;
+        handleResize(deltaL, alpha, rect, type, isShiftKey);
+      };
+
+      const onUp = () => {
+        document.body.style.cursor = 'auto';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if (!isMouseDown) return;
+        setIsMouseDown(false);
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    },
+    [
+      handleResize,
+      height,
+      isMouseDown,
+      resizeStartX,
+      resizeStartY,
+      rotateAngle,
+      startX,
+      startY,
+      width,
+    ]
+  );
+
+  const handleRotate = useCallback((angle, startAngle) => {
+    let angleToRotate = Math.round(startAngle + angle);
+    if (angleToRotate >= 360) {
+      angleToRotate -= 360;
+    } else if (angleToRotate < 0) {
+      angleToRotate += 360;
+    }
+    if (angleToRotate > 356 || angleToRotate < 4) {
+      angleToRotate = 0;
+    } else if (angleToRotate > 86 && angleToRotate < 94) {
+      angleToRotate = 90;
+    } else if (angleToRotate > 176 && angleToRotate < 184) {
+      angleToRotate = 180;
+    } else if (angleToRotate > 266 && angleToRotate < 274) {
+      angleToRotate = 270;
+    }
+    setRotateAngle(angleToRotate);
+  }, []);
+
+  const handleStartRotate = useCallback(
+    e => {
+      if (e.button !== 0) return;
+      const { clientX, clientY } = e;
+      const {
+        transform: { rotateAngle: startAngle },
+      } = tLToCenter({ top: startY, left: startX, width, height, rotateAngle });
+      const rect = labelBoxRef.current.getBoundingClientRect();
+      const center = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+      const startVector = {
+        x: clientX - center.x,
+        y: clientY - center.y,
+      };
+      setIsMouseDown(true);
+      const onMove = e => {
+        if (!isMouseDown) return;
+        e.stopImmediatePropagation();
+        const { clientX, clientY } = e;
+        const rotateVector = {
+          x: clientX - center.x,
+          y: clientY - center.y,
+        };
+        const angle = getAngle(startVector, rotateVector);
+        handleRotate(angle, startAngle);
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        if (!isMouseDown) return;
+        setIsMouseDown(false);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    },
+    [handleRotate, height, isMouseDown, rotateAngle, startX, startY, width]
   );
 
   const style = {
@@ -89,24 +288,37 @@ const Label = props => {
     height,
     backgroundColor: 'rgba(86,104,217,0.2)',
     border: '3px solid #5668D9',
+    transform: `rotate(${rotateAngle}deg)`,
   };
 
-  //   console.log(selected);
   return (
     <div
       id={id}
       className="board-label-box rect single-resizer"
       style={style}
       onClick={onClick}
-      onMouseDown={startDrag}
+      onMouseDown={handleStartDrag}
       tabIndex="-1"
+      ref={labelBoxRef}
     >
       {selected && (
         <React.Fragment>
-          <div className="rotate">
+          <div className="rotate" onMouseDown={handleStartRotate}>
             <div className="rotate-circle" />
             <div className="rotate-bar" />
           </div>
+
+          {direction.map(d => {
+            const cursor = `${getCursor(rotateAngle, d)}-resize`;
+            return (
+              <div
+                key={d}
+                style={{ cursor }}
+                className={`${zoomableMap[d]} resizable-handler`}
+                onMouseDown={e => handleStartResize(e, cursor)}
+              />
+            );
+          })}
 
           {direction.map(d => (
             <div key={d} className={`${zoomableMap[d]} square`} />
